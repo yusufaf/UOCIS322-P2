@@ -4,7 +4,7 @@ John Doe's Flask API.
 
 from flask import Flask
 
-import os.path
+import os.path 	# Used for determining if file path is valid
 
 app = Flask(__name__)
 

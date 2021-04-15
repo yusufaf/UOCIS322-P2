@@ -1,5 +1,5 @@
 """
-John Doe's Flask API.
+Yusuf Afzal's Flask API.
 """
 
 from flask import Flask, request, render_template, Response, make_response

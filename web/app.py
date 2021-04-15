@@ -4,6 +4,8 @@ John Doe's Flask API.
 
 from flask import Flask
 
+import os.path
+
 app = Flask(__name__)
 
 @app.route("/")

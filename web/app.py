@@ -26,7 +26,7 @@ STATUS_NOT_IMPLEMENTED = "HTTP/1.0 401 Not Implemented\n\n"
 # if path.endswith('.html'):
 # if os.path.exists(path)
 @app.route("/<path>") # route() tells Flask what URL should trigger function
-def hello(path):
+def respond(path):
     log.info("\n--- Received request ----")
     log.info("Request URL was {}\n***\n".format(request.url))
 
@@ -35,25 +35,28 @@ def hello(path):
     # TODO: Figure out which directory these 403 and 404.html files are; in parent of web folder?
     if path.endswith('.html'):
         if '~' in path or '//' in path or '..' in path:
-            response = make_response(render_template("../403.html"),403)
+            abort(403)
+            # response = make_response(render_template("../403.html"),403)
         elif not os.path.exists(path):
-            response = make_response(render_template("../404.html"),404)
+            abort(404)
+            # response = make_response(render_template("../404.html"),404)
         else:
             with open(path, 'r+') as f:
                 content = f.read()
-            response = make_response(render_template(content), 200)
-
+            return content, 200
 
     # return flask response object?
-    return response
-    # return "UOCIS docker demo!\n"
 
 
-# 
-# @app.errorhandler(404)
-# def page_not_found(e):
+@app.errorhandler(403)
+def page_forbidden(e):
+    # note that we set the 403 status explicitly
+    return render_template('403.html'), 403
+
+@app.errorhandler(404)
+def page_not_found(e):
     # note that we set the 404 status explicitly
-    # return render_template('404.html'), 404
+    return render_template('404.html'), 404
 
 
 if __name__ == "__main__":

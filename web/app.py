@@ -17,60 +17,47 @@ import configparser    # Configure from .ini files and command line
 from configparser import ConfigParser
 config = configparser.ConfigParser()
 config.read("./credentials.ini")
-global port
+global port                      # Better way to do this instead of globals?
 port = config['DEFAULT']['port']
+
+global DOCROOT
+DOCROOT = config['DEFAULT']['DOCROOT']
 
 
 import sys      # Used for printing because regular print() doesn't work 
 import os.path  # Used for determining if file path is valid
 
-app = Flask(__name__)   # template_folder="templates", static_folder="static"
+app = Flask(__name__,                   # template_folder="templates", static_folder="static"
+            template_folder="templates")   
 
-# app.route("/<path>")
-@app.route("/<path>") # route() tells Flask what URL should trigger function
+# https://stackoverflow.com/questions/21310147/catch-all-path-in-flask-app
+# This allows us to handle all paths from just a single route / method
+
+@app.route("/", defaults={"path": ""})
+@app.route("/<string:path>")
+@app.route("/<path:path>") # route() tells Flask what URL should trigger function
 def respond(path):  # Searching from root or having the <path> variable
     log.info("\n--- Received request ----")
     log.info("Request URL was {}\n***\n".format(request.url))
 
-    response = None
+    path = DOCROOT + path   # Prepends the DOCROOT (./) to the path
+
     log.info("PORT is " + port)
     log.info("PATH IS " + path)
 
-    # TODO: Where do templates/ directory and the error files in it go upon submission
-    # TODO: Don't limit this just to HTML, move the path.exists() up here to bigger if condition
-    if path.endswith('.html') or path.endswith('.css') or path.endswith('.txt'):
-        if '~' in path or '//' in path or '..' in path:
-            abort(403)
-            # alternatively(?): return redirect(url_for('page_forbidden'))
-        elif not os.path.exists(path):
-            abort(404)
-        else:
+    # TODO: Figure out whether having the 404.html in the templates directory is fine
+    if '~' in path or '//' in path or '..' in path: # Disallowed symbols, respond with 403
+        abort(403)
+    elif not os.path.exists(path):  # Path does not exist, respond with 404
+        abort(404)
+    else:  # Otherwise, the file exists:
+        if os.path.isfile(path):    # Checking whether it's a file, because other checks for existence
             with open(path, 'r+') as f:
                 content = f.read()
             return content, 200     # Transmit content of file with a 200 OK HTTP code
-    else:
-        return "That request is not handled", 401   # 401 was Not Impelemented from proj1
+    
+    return "That request is not handled", 401   # 401 was Not Impelemented from proj1
 
-    # return flask response object?
-
-@app.route("/<path>/<subpath>") # route() tells Flask what URL should trigger function
-def respond_subpath(path, subpath):  # Searching from root or having the <path> variable
-    path = path + "/" + subpath
-
-    log.info("PATH IS " + path)
-
-    if path.endswith('.html') or path.endswith('.css') or path.endswith('.txt'):
-        if '~' in path or '//' in path or '..' in path:
-            abort(403)
-            # alternatively(?): return redirect(url_for('page_forbidden'))
-        elif not os.path.exists(path):
-            abort(404)
-        else:
-            with open(path, 'r+') as f:
-                content = f.read()
-            return content, 200     # Transmit content of file with a 200 OK HTTP code
-    else:
-        return "That request is not handled", 401   # 401 was Not Impelemented from proj1
 
 # Error handler for 403 Error, use abort() command to call this handler in respond()
 @app.errorhandler(403)

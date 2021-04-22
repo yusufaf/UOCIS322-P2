@@ -4,7 +4,7 @@ Yusuf Afzal's Flask API.
 
 from flask import (Flask, request, 
                   render_template, Response, 
-                  abort, make_response)
+                  abort)
                 # request has data like the requested URL
                 # render_template provides for the response
 
@@ -16,15 +16,13 @@ log = logging.getLogger(__name__)
 import configparser    # Configure from .ini files and command line
 from configparser import ConfigParser
 config = configparser.ConfigParser()
-config.read("./credentials.ini")
+config.read("./app.ini")
 
-# Remove port and DOCROOT when testing in testium? 
-global port                      # Better way to do this instead of globals?
-port = config['DEFAULT'].get('port')
+# global port                           # Causing issues
+# port = config['DEFAULT'].get('port')
 
 global DOCROOT
 DOCROOT = config['DEFAULT'].get('DOCROOT')
-
 
 import sys      # Used for printing because regular print() doesn't work 
 import os.path  # Used for determining if file path is valid
@@ -32,7 +30,7 @@ import os.path  # Used for determining if file path is valid
 app = Flask(__name__,                   # template_folder="templates", static_folder="static"
             template_folder="templates")   
 
-# https://stackoverflow.com/questions/21310147/catch-all-path-in-flask-app
+# Source for below: https://stackoverflow.com/questions/21310147/catch-all-path-in-flask-app
 # This allows us to handle all paths from just a single route / method
 
 @app.route("/", defaults={"path": ""})
@@ -44,7 +42,7 @@ def respond(path):  # Searching from root or having the <path> variable
 
     path = DOCROOT + path   # Prepends the DOCROOT (./) to the path
 
-    log.info("PORT is " + port)
+    # log.info("PORT is " + port)
     log.info("PATH IS " + path)
 
     if '~' in path or '//' in path or '..' in path: # Disallowed symbols, respond with 403
@@ -55,9 +53,9 @@ def respond(path):  # Searching from root or having the <path> variable
         if os.path.isfile(path):    # Checking whether it's a file, because other checks for existence
             with open(path, 'r+') as f:
                 content = f.read()
-            return content, 200     # Transmit content of file with a 200 OK HTTP code
+            return content, 200     # Transmit content of file with a 200 OK HTTP code, maybe unnecessary
     
-    return "That request is not handled", 401   # 401 was Not Impelemented from proj1
+    return "That request is not handled", 401   # 401 was Not Implemented from proj1
 
 
 # Error handler for 403 Error, use abort() command to call this handler in respond()
@@ -71,5 +69,5 @@ def page_not_found(e):
     return render_template('404.html'), 404
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=port)  # port = port, passing in from credentials
+    app.run(debug=True, host='0.0.0.0')  # Stop passing in from credentials.ini
 

@@ -17,11 +17,13 @@ import configparser    # Configure from .ini files and command line
 from configparser import ConfigParser
 config = configparser.ConfigParser()
 config.read("./credentials.ini")
+
+# Remove port and DOCROOT when testing in testium? 
 global port                      # Better way to do this instead of globals?
-port = config['DEFAULT']['port']
+port = config['DEFAULT'].get('port')
 
 global DOCROOT
-DOCROOT = config['DEFAULT']['DOCROOT']
+DOCROOT = config['DEFAULT'].get('DOCROOT')
 
 
 import sys      # Used for printing because regular print() doesn't work 
@@ -45,7 +47,6 @@ def respond(path):  # Searching from root or having the <path> variable
     log.info("PORT is " + port)
     log.info("PATH IS " + path)
 
-    # TODO: Figure out whether having the 404.html in the templates directory is fine
     if '~' in path or '//' in path or '..' in path: # Disallowed symbols, respond with 403
         abort(403)
     elif not os.path.exists(path):  # Path does not exist, respond with 404

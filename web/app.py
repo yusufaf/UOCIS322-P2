@@ -1,13 +1,11 @@
 """
 Yusuf Afzal's Flask API.
 """
-
 from flask import (Flask, request, 
                   render_template, Response, 
                   abort)
-                # request has data like the requested URL
-                # render_template provides for the response
-
+import sys      # Used for printing because regular print() doesn't work 
+import os.path  # Used for determining if file path is valid
 import logging
 logging.basicConfig(format='%(levelname)s:%(message)s',
                     level=logging.INFO)
@@ -17,22 +15,16 @@ import configparser    # Configure from .ini files and command line
 from configparser import ConfigParser
 config = configparser.ConfigParser()
 config.read("./app.ini")
-
-# global port                           # Causing issues
-# port = config['DEFAULT'].get('port')
-
+                           
 global DOCROOT
 DOCROOT = config['DEFAULT'].get('DOCROOT')
 
-import sys      # Used for printing because regular print() doesn't work 
-import os.path  # Used for determining if file path is valid
 
 app = Flask(__name__,                   # template_folder="templates", static_folder="static"
             template_folder="templates")   
 
 # Source for below: https://stackoverflow.com/questions/21310147/catch-all-path-in-flask-app
 # This allows us to handle all paths from just a single route / method
-
 @app.route("/", defaults={"path": ""})
 @app.route("/<string:path>")
 @app.route("/<path:path>") # route() tells Flask what URL should trigger function
@@ -41,9 +33,6 @@ def respond(path):  # Searching from root or having the <path> variable
     log.info("Request URL was {}\n***\n".format(request.url))
 
     path = DOCROOT + path   # Prepends the DOCROOT (./) to the path
-
-    # log.info("PORT is " + port)
-    log.info("PATH IS " + path)
 
     if '~' in path or '//' in path or '..' in path: # Disallowed symbols, respond with 403
         abort(403)
@@ -69,5 +58,5 @@ def page_not_found(e):
     return render_template('404.html'), 404
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0')  # Stop passing in from credentials.ini
+    app.run(debug=True, host='0.0.0.0')  
 

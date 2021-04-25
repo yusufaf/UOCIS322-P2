@@ -1,9 +1,7 @@
 """
 Yusuf Afzal's Flask API.
 """
-from flask import (Flask, request, 
-                  render_template, Response, 
-                  abort)
+from flask import (Flask, request, render_template, Response, abort)
 import sys      # Used for printing because regular print() doesn't work 
 import os.path  # Used for determining if file path is valid
 import logging
@@ -19,40 +17,33 @@ config.read("./app.ini")
 global DOCROOT
 DOCROOT = config['DEFAULT'].get('DOCROOT')
 
-
-app = Flask(__name__,                   # template_folder="templates", static_folder="static"
-            template_folder="templates")   
+app = Flask(__name__)   # Don't need to pass in template_folder param
 
 # Source for below: https://stackoverflow.com/questions/21310147/catch-all-path-in-flask-app
-# This allows us to handle all paths from just a single route / method
-@app.route("/", defaults={"path": ""})
-@app.route("/<string:path>")
+# @app.route("/", defaults={"path": ""})
+# @app.route("/<string:path>")  # catching string variables
 @app.route("/<path:path>") # route() tells Flask what URL should trigger function
-def respond(path):  # Searching from root or having the <path> variable
-    log.info("\n--- Received request ----")
-    log.info("Request URL was {}\n***\n".format(request.url))
-
+def respond(path):  
     path = DOCROOT + path   # Prepends the DOCROOT (./) to the path
-
     if '~' in path or '//' in path or '..' in path: # Disallowed symbols, respond with 403
         abort(403)
-    elif not os.path.exists(path):  # Path does not exist, respond with 404
+    elif not os.path.exists(path):  # Path doesn't exist, respond with 404
         abort(404)
     else:  # Otherwise, the file exists:
-        if os.path.isfile(path):    # Checking whether it's a file, because other checks for existence
+        if os.path.isfile(path):    # Checking if it's a file, previous if checks for existence
             with open(path, 'r+') as f:
                 content = f.read()
-            return content, 200     # Transmit content of file with a 200 OK HTTP code, maybe unnecessary
+            return content, 200     # Send file content with 200 OK HTTP code
     
     return "That request is not handled", 401   # 401 was Not Implemented from proj1
 
 
-# Error handler for 403 Error, use abort() command to call this handler in respond()
+# Error handler for 403 Forbidden, use abort() to invoke this handler in respond()
 @app.errorhandler(403)
 def page_forbidden(e):
     return render_template('403.html'), 403     
 
-# Error handler for 404 Error, use abort() command to call this handler in respond()
+# Error handler for 404 Not Found, use abort() to invoke this handler in respond()
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404

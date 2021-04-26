@@ -5,8 +5,7 @@ from flask import (Flask, request, render_template, Response, abort)
 import sys      # Used for printing because regular print() doesn't work 
 import os.path  # Used for determining if file path is valid
 import logging
-logging.basicConfig(format='%(levelname)s:%(message)s',
-                    level=logging.INFO)
+logging.basicConfig(format='%(levelname)s:%(message)s',level=logging.INFO)
 log = logging.getLogger(__name__)
 
 import configparser    # Configure from .ini files and command line
@@ -17,14 +16,12 @@ config.read("./app.ini")
 global DOCROOT
 DOCROOT = config['DEFAULT'].get('DOCROOT')
 
-app = Flask(__name__)   # Don't need to pass in template_folder param
+app = Flask(__name__)   
 
-# Source for below: https://stackoverflow.com/questions/21310147/catch-all-path-in-flask-app
-# @app.route("/", defaults={"path": ""})
-# @app.route("/<string:path>")  # catching string variables
+# Possibly helpful?: https://stackoverflow.com/questions/21310147/catch-all-path-in-flask-app
 @app.route("/<path:path>") # route() tells Flask what URL should trigger function
 def respond(path):  
-    path = DOCROOT + path   # Prepends the DOCROOT (./) to the path
+    path = DOCROOT + path   # Prepends DOCROOT "./" to the path
     if '~' in path or '//' in path or '..' in path: # Disallowed symbols, respond with 403
         abort(403)
     elif not os.path.exists(path):  # Path doesn't exist, respond with 404
